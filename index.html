@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СПбГУТ Бонч - Студенческий помощник</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/6.7.0/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --tg-theme-bg-color: ###dff2f0;
+            --tg-theme-text-color: #000000;
+            --tg-theme-button-color: #3390ec;
+            --tg-theme-button-text-color: #ffffff;
+            --accent-color: #0F4C81;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .search-container {
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+        }
+
+        .item-card {
+            background-color: rgba(15, 76, 129, 0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .file-upload {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .chat-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .message.sent {
+            background-color: var(--accent-color);
+            color: white;
+            margin-left: 20%;
+        }
+
+        .message.received {
+            background-color: #e9ecef;
+            margin-right: 20%;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background-color: #e9ecef;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        #notification-bell {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        #notifications-panel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+            transition: right 0.3s;
+            z-index: 1000;
+        }
+
+        #notifications-panel.active {
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="data:image/jpeg;base64,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" alt="СПбГУТ логотип" class="logo">
+        <h1>СПбГУТ Бонч</h1>
+        <div id="notification-bell">🔔</div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="nav-button" onclick="showContent('schedule')">Расписание</button>
+        <button class="nav-button" onclick="showContent('homework')">Домашние задания</button>
+        <button class="nav-button" onclick="showContent('group')">Список группы</button>
+        <button class="nav-button" onclick="showContent('notes')">Заметки</button>
+        <button class="nav-button" onclick="showContent('files')">Файлы</button>
+        <button class="nav-button" onclick="showContent('chat')">Чат группы</button>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="search-input" placeholder="Поиск по всему приложению..." oninput="globalSearch(this.value)">
+    </div>
+
+    <div id="notifications-panel">
+        <h2>Уведомления</h2>
+        <div id="notifications-list"></div>
+    </div>
+
+    <div id="schedule" class="content">
+        <h2>Расписание</h2>
+        <div class="tabs">
+            <div class="tab active" onclick="changeScheduleTab('today')">Сегодня</div>
+            <div class="tab" onclick="changeScheduleTab('tomorrow')">Завтра</div>
+            <div class="tab" onclick="changeScheduleTab('week')">Неделя</div>
+        </div>
+        <div id="schedule-content"></div>
+    </div>
+
+    <div id="homework" class="content">
+        <h2>Домашние задания</h2>
+        <input type="text" id="homework-subject" placeholder="Предмет">
+        <textarea id="homework-task" placeholder="Задание"></textarea>
+        <input type="date" id="homework-deadline">
+        <button onclick="addHomework()">Добавить ДЗ</button>
+        <div id="homework-list"></div>
+    </div>
+
+    <div id="files" class="content">
+        <h2>Файлы</h2>
+        <label class="file-upload-label">
+            Загрузить файл
+            <input type="file" class="file-upload" onchange="uploadFile(this)">
+        </label>
+        <div id="files-list"></div>
+    </div>
+
+    <div id="chat" class="content">
+        <h2>Чат группы</h2>
+        <div class="chat-container" id="chat-messages"></div>
+        <input type="text" id="chat-input" placeholder="Введите сообщение...">
+        <button onclick="sendMessage()">Отправить</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Данные
+        let scheduleData = {};
+        let homeworkData = [];
+        let filesData = [];
+        let chatMessages = [];
+        let notifications = [];
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            showContent('schedule');
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Имитация получения данных с сервера
+            fetchSchedule();
+            setupNotifications();
+        }
+
+        // API интеграция (имитация)
+        async function fetchSchedule() {
+            // Имитация запроса к API вуза
+            const response = await simulateAPICall('/api/schedule');
+            scheduleData = response;
+            updateScheduleDisplay();
+        }
+
+        function simulateAPICall(endpoint) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Имитация данных с сервера
+                    const mockData = {
+                        today: [
+                            { time: '9:00', subject: 'Математика', room: '302' },
+                            { time: '10:45', subject: 'Физика', room: '505' },
+                        ],
+                        tomorrow: [
+                            { time: '9:00', subject: 'Информатика', room: '404' },
+                        ],
+                        week: [/* ... */]
+                    };
+                    resolve(mockData);
+                }, 500);
+            });
+        }
+
+        // Уведомления
+        function setupNotifications() {
+            document.getElementById('notification-bell').addEventListener('click', toggleNotificationsPanel);
+
+            // Имитация получения уведомлений
+            setTimeout(() => {
+                addNotification('Новое домашнее задание по физике');
+                addNotification('Изменения в расписании на завтра');
+            }, 2000);
+        }
+
+        function addNotification(message) {
+            notifications.push({
+                message,
+                time: new Date().toLocaleTimeString()
+            });
+            updateNotificationsList();
+        }
+
+        function updateNotificationsList() {
+            const list = document.getElementById('notifications-list');
+            list.innerHTML = notifications.map(notif => `
+                <div class="item-card">
+                    <p>${notif.message}</p>
+                    <small>${notif.time}</small>
+                </div>
+            `).join('');
+        }
+
+        function toggleNotificationsPanel() {
+            const panel = document.getElementById('notifications-panel');
+            panel.classList.toggle('active');
+        }
+
+        // Поиск
+        function globalSearch(query) {
+            // Реализация поиска по всем разделам
+            if (!query) return;
+
+            const searchResults = {
+                homework: homeworkData.filter(hw =>
+                    hw.subject.toLowerCase().includes(query.toLowerCase()) ||
+                    hw.task.toLowerCase().includes(query.toLowerCase())
+                ),
+                files: filesData.filter(file =>
+                    file.name.toLowerCase().includes(query.toLowerCase())
+                ),
+                // Добавьте другие разделы по необходимости
+            };
+
+            // Отображение результатов поиска
+            showSearchResults(searchResults);
+        }
+
+        function showSearchResults(results) {
+            // Реализация отображения результатов поиска
+            console.log('Search results:', results);
+        }
+
+        // Файловое хранилище
+        function uploadFile(input) {
+            const file = input.files[0];
+            if (file) {
+                filesData.push({
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    uploadDate: new Date().toLocaleString()
+                });
+                updateFilesList();
+            }
+        }
+
+        function updateFilesList() {
+            const filesList = document.getElementById('files-list');
+            filesList.innerHTML = filesData.map((file, index) => `
+                <div class="item-card">
+                    <h3>${file.name}</h3>
+                    <p>Размер: ${formatFileSize(file.size)}</p>
+                    <p>Загружено: ${file.uploadDate}</p>
+                    <button onclick="downloadFile(${index})">Скачать</button>
+                </div>
+            `).join('');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function downloadFile(index) {
+            // Имитация скачивания файла
+            alert(`Скачивание файла "${filesData[index].name}" началось...`);
+        }
+
+        // Чат группы
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (message) {
+                chatMessages.push({
+                    text: message,
+                    sender: 'me',
+                    time: new Date().toLocaleTimeString()
+                });
+                updateChat();
+                input.value = '';
+
+                // Имитация ответа
+                setTimeout(() => {
+                    chatMessages.push({
+                        text: 'Спасибо за сообщение!',
+                        sender: 'other',
+                        time: new Date().toLocaleTimeString()
+                    });
+                    updateChat();
+                }, 1000);
+            }
+        }
+
+        function updateChat() {
+            const chatContainer = document.getElementById('chat-messages');
+            chatContainer.innerHTML = chatMessages.map(msg => `
+                <div class="message ${msg.sender === 'me' ? 'sent' : 'received'}">
+                    <p>${msg.text}</p>
+                    <small>${msg.time}</small>
+                </div>
+            `).join('');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Вспомогательные функции
+        function showContent(contentId) {
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(contentId).classList.add('active');
+        }
+
+        function changeScheduleTab(tab) {
+            // Обновление активной вкладки
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Обновление отображения расписания
+            updateScheduleDisplay(tab);
+        }
+
+        function updateScheduleDisplay(tab = 'today') {
+            const scheduleContent = document.getElementById('schedule-content');
+            const schedule = scheduleData[tab] || [];
+
+            scheduleContent.innerHTML = schedule.map(lesson => `
+                <div class="item-card">
+                    <h3>${lesson.time} - ${lesson.subject}</h3>
+                    <p>Аудитория: ${lesson.room}</p>
+                </div>
+            `).join('') || '<p>Нет занятий</p>';
+        }
+    </script>
+</body>
+</html>
