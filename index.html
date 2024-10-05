@@ -5,11 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>СПбГУТ Бонч - Студенческий помощник</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/6.7.0/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-button-color: #3390ec;
+            --tg-theme-button-text-color: #ffffff;
+            --accent-color: #0F4C81; /* СПбГУТ синий */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .item-card {
+            background-color: rgba(15, 76, 129, 0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        input, textarea, select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .file-input-container {
+            margin-bottom: 15px;
+        }
+
+        .custom-file-input {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .schedule-day {
+            margin-bottom: 20px;
+        }
+
+        .schedule-day h3 {
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
-        <img src="/api/placeholder/80/80" alt="СПбГУТ логотип" class="logo">
+        <img src="data:image/jpeg;base64,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" alt="СПбГУТ логотип" class="logo">
         <h1>СПбГУТ Бонч</h1>
     </div>
 
@@ -22,9 +130,15 @@
 
     <div id="schedule" class="content">
         <h2>Расписание</h2>
-        <div id="schedule-content">
-            <!-- Расписание будет добавлено через JavaScript -->
-        </div>
+        <select id="schedule-day" onchange="updateScheduleDisplay()">
+            <option value="monday">Понедельник</option>
+            <option value="tuesday">Вторник</option>
+            <option value="wednesday">Среда</option>
+            <option value="thursday">Четверг</option>
+            <option value="friday">Пятница</option>
+            <option value="saturday">Суббота</option>
+        </select>
+        <div id="schedule-content"></div>
     </div>
 
     <div id="homework" class="content">
@@ -33,23 +147,302 @@
         <textarea id="homework-task" placeholder="Задание"></textarea>
         <input type="date" id="homework-deadline">
         <button onclick="addHomework()">Добавить ДЗ</button>
+        <div id="error-homework" class="error-message"></div>
         <div id="homework-list"></div>
     </div>
 
     <div id="group" class="content">
         <h2>Список группы</h2>
-        <input type="text" id="group-member-name" placeholder="Имя">
+        <input type="text" id="group-member-name" placeholder="Имя и фамилия">
         <input type="text" id="group-member-role" placeholder="Роль (например, староста)">
         <button onclick="addGroupMember()">Добавить участника</button>
+        <div id="error-group" class="error-message"></div>
         <div id="group-list"></div>
     </div>
 
     <div id="files" class="content">
         <h2>Файлы</h2>
-        <input type="file" id="file-input" onchange="addFile()">
+        <div class="file-input-container">
+            <label class="custom-file-input">
+                Выбрать файл
+                <input type="file" id="file-input" style="display: none;" onchange="addFile()">
+            </label>
+        </div>
+        <div id="error-files" class="error-message"></div>
         <div id="files-list"></div>
     </div>
 
-    <script src="script.js"></script>
-</body>
-</html>
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Класс для работы с локальным хранилищем
+        class LocalStorage {
+            constructor(key) {
+                this.key = key;
+            }
+
+            getData() {
+                const data = localStorage.getItem(this.key);
+                return data ? JSON.parse(data) : null;
+            }
+
+            setData(data) {
+                localStorage.setItem(this.key, JSON.stringify(data));
+            }
+        }
+
+        // Инициализация хранилищ
+        const homeworkStorage = new LocalStorage('homework');
+        const filesStorage = new LocalStorage('files');
+        const groupStorage = new LocalStorage('group');
+        const scheduleStorage = new LocalStorage('schedule');
+
+        // Начальные данные
+        const initialData = {
+            homework: [],
+            files: [],
+            group: [],
+            schedule: {
+                monday: [
+                    { time: '9:00', subject: 'Математика', room: '302' },
+                    { time: '10:45', subject: 'Физика', room: '505' }
+                ],
+                tuesday: [
+                    { time: '9:00', subject: 'Информатика', room: '404' },
+                    { time: '10:45', subject: 'Английский', room: '205' }
+                ],
+                wednesday: [
+                    { time: '9:00', subject: 'История', room: '301' },
+                    { time: '10:45', subject: 'Философия', room: '401' }
+                ],
+                thursday: [
+                    { time: '9:00', subject: 'Программирование', room: '505' },
+                    { time: '10:45', subject: 'Базы данных', room: '403' }
+                ],
+                friday: [
+                    { time: '9:00', subject: 'Сети', room: '404' },
+                    { time: '10:45', subject: 'Защита информации', room: '502' }
+                ],
+                saturday: [
+                    { time: '9:00', subject: 'Факультатив', room: '301' }
+                ]
+            }
+        };
+
+        // Инициализация данных при первом запуске
+        function initializeData() {
+            if (!homeworkStorage.getData()) {
+                homeworkStorage.setData(initialData.homework);
+            }
+            if (!filesStorage.getData()) {
+                filesStorage.setData(initialData.files);
+            }
+            if (!groupStorage.getData()) {
+                groupStorage.setData(initialData.group);
+            }
+            if (!scheduleStorage.getData()) {
+                scheduleStorage.setData(initialData.schedule);
+            }
+        }
+
+        // Функции для работы с домашними заданиями
+        function addHomework() {
+            const subject = document.getElementById('homework-subject').value;
+            const task = document.getElementById('homework-task').value;
+            const deadline = document.getElementById('homework-deadline').value;
+            const errorElement = document.getElementById('error-homework');
+
+            if (!subject || !task || !deadline) {
+                errorElement.textContent = 'Пожалуйста, заполните все поля';
+                return;
+            }
+
+            errorElement.textContent = '';
+            const homework = homeworkStorage.getData() || [];
+            homework.push({ subject, task, deadline });
+            homeworkStorage.setData(homework);
+
+            updateHomeworkList();
+
+            // Очистка полей
+            document.getElementById('homework-subject').value = '';
+            document.getElementById('homework-task').value = '';
+            document.getElementById('homework-deadline').value = '';
+        }
+
+        function updateHomeworkList() {
+            const homeworkList = document.getElementById('homework-list');
+            const homework = homeworkStorage.getData() || [];
+
+            homeworkList.innerHTML = homework.map((hw, index) => `
+                <div class="item-card">
+                    <h3>${hw.subject}</h3>
+                    <p>${hw.task}</p>
+                    <p>Срок: ${hw.deadline}</p>
+                    <button onclick="deleteHomework(${index})">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteHomework(index) {
+            const homework = homeworkStorage.getData() || [];
+            homework.splice(index, 1);
+            homeworkStorage.setData(homework);
+            updateHomeworkList();
+        }
+
+        // Функции для работы с файлами
+        function addFile() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            const errorElement = document.getElementById('error-files');
+
+            if (!file) {
+                errorElement.textContent = 'Пожалуйста, выберите файл';
+                return;
+            }
+
+            errorElement.textContent = '';
+            const files = filesStorage.getData() || [];
+            files.push({
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                lastModified: new Date(file.lastModified).toLocaleString()
+            });
+            filesStorage.setData(files);
+
+            updateFilesList();
+            fileInput.value = '';
+        }
+
+        function updateFilesList() {
+            const filesList = document.getElementById('files-list');
+            const files = filesStorage.getData() || [];
+
+            filesList.innerHTML = files.map((file, index) => `
+                <div class="item-card">
+                    <h3>${file.name}</h3>
+                    <p>Размер: ${formatFileSize(file.size)}</p>
+                    <p>Тип: ${file.type}</p>
+                    <p>Последнее изменение: ${file.lastModified}</p>
+                    <button onclick="deleteFile(${index})">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteFile(index) {
+            const files = filesStorage.getData() || [];
+            files.splice(index, 1);
+            filesStorage.setData(files);
+            updateFilesList();
+        }
+
+        // Функции для работы со списком группы
+        function addGroupMember() {
+            const name = document.getElementById('group-member-name').value;
+            const role = document.getElementById('group-member-role').value;
+            const errorElement = document.getElementById('error-group');
+
+            if (!name) {
+                errorElement.textContent = 'Пожалуйста, введите имя';
+                return;
+            }
+
+            errorElement.textContent = '';
+            const group = groupStorage.getData() || [];
+            group.push({ name, role });
+            groupStorage.setData(group);
+
+            updateGroupList();
+
+            document.getElementById('group-member-name').value = '';
+            document.getElementById('group-member-role').value = '';
+        }
+
+        function updateGroupList() {
+            const groupList = document.getElementById('group-list');
+            const group = groupStorage.getData() || [];
+
+            groupList.innerHTML = group.map((member, index) => `
+                <div class="item-card">
+                    <h3>${member.name}</h3>
+                    ${member.role ? `<p>Роль: ${member.role}</p>` : ''}
+                    <button onclick="deleteGroupMember(${index})">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteGroupMember(index) {
+            const group = groupStorage.getData() || [];
+            group.splice(index, 1);
+            groupStorage.setData(group);
+            updateGroupList();
+        }
+
+        // Функции для работы с расписанием
+        function updateScheduleDisplay() {
+            const selectedDay = document.getElementById('schedule-day').value;
+            const scheduleContent = document.getElementById('schedule-content');
+            const schedule = scheduleStorage.getData() || initialData.schedule;
+            const daySchedule = schedule[selectedDay] || [];
+
+            scheduleContent.innerHTML = daySchedule.map(lesson => `
+                <div class="item-card">
+                    <h3>${lesson.time}</h3>
+                    <p>Предмет: ${lesson.subject}</p>
+                    <p>Аудитория: ${lesson.room}</p>
+                </div>
+            `).join('') || '<p>Нет занятий</p>';
+        }
+
+        // Вспомогательные функции
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showContent(contentId) {
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(contentId).classList.add('active');
+
+            if (contentId === 'schedule') {
+                updateScheduleDisplay();
+            }
+        }
+
+        // Инициализация приложения
+        document.addEventListener
+        <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeData();
+        updateHomeworkList();
+        updateFilesList();
+        updateGroupList();
+        updateScheduleDisplay();
+
+        // Активируем тему оформления Telegram
+        tg.MainButton.text = "СПбГУТ Бонч"; // пример изменения кнопки
+        tg.MainButton.show();
+    });
+
+    // Инициализация приложения
+    function initializeApp() {
+        tg.ready();
+    }
+
+    // Обработка события закрытия веб-приложения
+    tg.onEvent('mainButtonClicked', () => {
+        tg.close();
+    });
+
+    // Запуск инициализации приложения
+    initializeApp();
+</script>
